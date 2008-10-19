@@ -22,6 +22,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #define _in_terror_cc_
 #include "terror.h"
 
@@ -29,6 +30,7 @@
 // 1999:
 // 14:06 15 Feb terror.cc derived from tobject.cc
 // 21:12 25 Aug noreturn hack for gcc2.95.1
+// 2008-10-19 Fix missing #include for gcc 4.3
 
 
 // global data:
