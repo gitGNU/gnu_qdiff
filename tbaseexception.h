@@ -29,7 +29,10 @@
 
 
 // base class of all exceptions 
-class TException {};
+class TException {
+ public:
+   virtual ~TException() { } 
+};
 
 // general exceptions, also base classes
 class TIndexOutOfRangeException: public TException {
