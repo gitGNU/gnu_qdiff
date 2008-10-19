@@ -1069,7 +1069,7 @@ bool TAppConfig::save(TString& rc_name_out) {
 	    j = line.firstOccurence('=');
 	    if(j < 0) {
 	       line.cropSpace();
-	       for(j=0; j<line.len() && (!isspace(line[j])); j++);      
+	       for(j=0; j<line.len() && (!isspace(line[j])); j++) ;      
 	    }
 	    line.truncate(j);
 	    upd:

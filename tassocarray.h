@@ -290,7 +290,7 @@ template<class Key, class T>
 void TAssocArray<Key,T>::optimizeSize() {
    int i;
    
-   for(i=0; some_primes[i] && (_num > some_primes[i]); i++);
+   for(i=0; some_primes[i] && (_num > some_primes[i]); i++) ;
    if(some_primes[i]==0) i--;
    int newsize = some_primes[i];
 //   printf("optimizing (_num=%8d,size=%8d,newsize=%8d)\n", _num, size, newsize);
