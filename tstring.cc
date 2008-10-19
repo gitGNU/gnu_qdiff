@@ -924,7 +924,7 @@ void TString::translateChar(char from, char to) {
 int TString::firstOccurence(char c) const {
    int i;
    
-   for(i=0; (i < rep->len) && ((*rep)[i] != c); ++i);
+   for(i=0; (i < rep->len) && ((*rep)[i] != c); ++i) ;
    if(i < rep->len) return i;
    else return -1;
 }
@@ -1037,7 +1037,7 @@ TArray<TString> loadTextFile(const char *fname) {
    FILE *f = fopen(fname, "r");
    if(f==0) throw TFileOperationErrnoException(fname, "fopen(mode='r')", errno);
    TArray<TString> r;
-   for(int i=0; r[i].readLine(f); i++);
+   for(int i=0; r[i].readLine(f); i++) ;
    fclose(f);
    r.killLastElement();
    r.fixedSize();
@@ -1047,7 +1047,7 @@ TArray<TString> loadTextFile(const char *fname) {
 
 TArray<TString> loadTextFile(FILE *file) {
    TArray<TString> r;
-   for(int i=0; r[i].readLine(file); i++);
+   for(int i=0; r[i].readLine(file); i++) ;
    r.killLastElement();
    r.fixedSize();
    return r;
