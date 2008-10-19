@@ -25,7 +25,7 @@
 TROTFile::TROTFile(const char *filename, int num_buf, int buf_size)
 :numbuf(num_buf), bufsize(buf_size), bufbits(0), bufmask(0), nummask(0),
 offmask(0), off(new int[numbuf]), 
-buf(new (uchar*)[numbuf]), _size(0), fname(filename), file(0)
+buf(new uchar *[numbuf]), _size(0), fname(filename), file(0)
 {
    bool nonreg = false;
    
@@ -105,14 +105,14 @@ TROTFile::~TROTFile() {
 int TROTFile::intLog2(int i) const {
    if(i<=0) fatalError("IntLog2: i must be >0! (was %d)", i);
    int r;
-   for(r=0; i!=1; r++, i>>=1);
+   for(r=0; i!=1; r++, i>>=1) ;
    return r;
 }
 
 
 bool TROTFile::isPowerOf2(int i) const {
    if(i<=0) return false;
-   for(; (i&1)==0; i>>=1);
+   for(; (i&1)==0; i>>=1) ;
    if(i==1) return true;
    else return false;
 }
