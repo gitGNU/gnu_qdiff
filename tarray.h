@@ -45,7 +45,7 @@
 template<class T>
 class TArray {
    // friend: comparison operator:
-   friend bool operator == <> (const TArray<T>& a, const TArray<T>& b);
+   //friend bool operator == <> (const TArray<T>& a, const TArray<T>& b);
 
  public:
    
