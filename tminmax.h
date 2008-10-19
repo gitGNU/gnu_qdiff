@@ -29,4 +29,4 @@ template<class T> inline bool tOutOfRange(const T& value,
 					 const T& upper) {
    if((value<lower) || (value>upper)) return true; else return false;}
 
-#endif  _minmax_h_
+#endif // _minmax_h_

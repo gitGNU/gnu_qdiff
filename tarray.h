@@ -331,6 +331,6 @@ inline TArray<T> operator+(const TArray<T>& a, const TArray<T>& b) {
 /*@}*/
 /*@}*/
 
-#endif _ngw_tarray_h_
+#endif // _ngw_tarray_h_
 
 

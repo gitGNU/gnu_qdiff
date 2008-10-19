@@ -432,5 +432,5 @@ inline int hashKeyToInt(int u) {return u;}
 inline int hashKeyToInt(uint u) {return u;}
 
 
-#endif _ngw_tassocarray_h_
+#endif // _ngw_tassocarray_h_
 

@@ -36,5 +36,5 @@ template<class T> inline bool operator >  (const T& a, const T& b) {return b < a
 template<class T> inline bool operator <= (const T& a, const T& b) {return !(b < a);}
 template<class T> inline bool operator >= (const T& a, const T& b) {return !(a < b);}
 
-#endif  _relops_h_
+#endif // _relops_h_
 

@@ -28,4 +28,4 @@ typedef unsigned short ushort;
 typedef unsigned char uchar;
 typedef signed char schar;
 
-#endif  _ngw_ttypes_h_
+#endif // _ngw_ttypes_h_
