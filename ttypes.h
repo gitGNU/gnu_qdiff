@@ -3,6 +3,7 @@
  * tapplication frame helper - define generic types
  * 
  * Copyright (C) 1998 by Johannes Overmann <overmann@iname.com>
+ * Copyright (C) 2008 by Tong Sun <suntong001@users.sourceforge.net>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

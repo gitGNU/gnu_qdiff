@@ -19,8 +19,8 @@ BASEDIR = /tmp/dist
 DISTNAME = $(TARGET)-$(VER)
 DISTFULL = $(DISTNAME).tar.gz
 LSMFULL = $(DISTNAME).lsm
-AUTHOR = "overmann@iname.com (Johannes Overmann)"
-WEBPAGE = http://www.linuxfreak.com/~overmann/soft/
+AUTHOR = "suntong001@users.sourceforge.net (Tong Sun)"
+WEBPAGE = http://savannah.nongnu.org/projects/qdiff
 
 dist: clobber
 	@mkdir -p $(BASEDIR)

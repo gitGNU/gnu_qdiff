@@ -2,6 +2,7 @@
  * qdiff - binary diff and more
  * 
  * Copyright (C) 1998 by Johannes Overmann <overmann@iname.com>
+ * Copyright (C) 2008 by Tong Sun <suntong001@users.sourceforge.net>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +43,7 @@
 
 const char *option_list[] ={
    "#usage='Usage: %n [OPTION]... FILE1 FILE2\n'",
-   "#trailer='\n%n version %v *** (C) 1997-1999 by Johannes Overmann\ncomments, bugs and suggestions welcome: %e\n%gpl'",
+   "#trailer='\n%n version %v\n *** (C) 1997-1999 by Johannes Overmann\n *** (C) 2008 by Tong Sun\ncomments, bugs and suggestions welcome: %e\n%gpl'",
    "#onlycl", // only command line options
    "name=byte-by-byte,      type=switch, char=b,                                     help=\"compare files byte by byte, like 'cmp'\", headline=diff options:",
    "name=no-heuristics,     type=switch, char=f,                                     help='do not use heuristics to speed up large differing blocks, note that the result is always correct but with this option you may find a smaller number of differing bytes'",

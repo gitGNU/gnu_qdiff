@@ -3,6 +3,7 @@
  * tappconfig.cc - console application framework
  * 
  * Copyright (C) 1998 by Johannes Overmann <overmann@iname.com>
+ * Copyright (C) 2008 by Tong Sun <suntong001@users.sourceforge.net>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +32,7 @@
 // config:
 
 // global email of author:
-const char * TAPPCONFIG_EMAIL = "overmann@iname.com";
+const char * TAPPCONFIG_EMAIL = "suntong001@users.sourceforge.net";
 // gpl message
 const char * TAPPCONFIG_GPL = "this program is distributed under the terms of the GNU General Public License";
 
@@ -115,7 +116,7 @@ const char * TAPPCONFIG_GPL = "this program is distributed under the terms of th
 const char *options[] = {
    "#usage='Usage: %n [OPTIONS and FILES] -- [FILES]\n\n"   // no comma here!
      "this program does very strange things\n",
-   "#trailer='\n%n version %v *** (C) 1997 by Johannes Overmann\ncomments, bugs and suggestions welcome: %e\n%gpl'",
+   "#trailer='\n%n version %v\n *** (C) 1997 by Johannes Overmann\n *** (C) 2008 by Tong Sun\ncomments, bugs and suggestions welcome: %e\n%gpl'",
    "#onlycl", // only command line options
    "#stopat--", // stop option scanning after a -- parameter
    // options
