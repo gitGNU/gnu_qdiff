@@ -21,6 +21,14 @@
 #ifndef _tdiffoutput_h_
 #define _tdiffoutput_h_
 
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "terror.h"
 #include "trotfile.h"
 #include "tappconfig.h"

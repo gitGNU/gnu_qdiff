@@ -34,7 +34,7 @@ class TROTFile {
    // readonly access
    uchar operator[] (int i);
    int size() const {return _size;}
-   const char *name() const {return fname;};
+   const char *name() const {return fname.data();};
    
  private:
    // internal buffer
@@ -49,7 +49,7 @@ class TROTFile {
    
    // real file
    int _size;    // size of file
-   TString fname; // filename
+   tstring fname; // filename
    FILE *file;   // open file
    
    // private methods

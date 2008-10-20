@@ -19,11 +19,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * *GPL*END*/  
 
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "tappconfig.h"
 #include "trotfile.h"
 #include "tdiffoutput.h"
 #include "tminmax.h"
-#include <stdio.h>
+#include "config.h"
 
 // *** qdiff ***
 
@@ -227,8 +234,8 @@ int main(int argc, char *argv[]) {
    }
    
    // init files
-   TROTFile f1(ac.param(0), numbuf, bufsize);
-   TROTFile f2(ac.param(1), numbuf, bufsize);
+   TROTFile f1(ac.param(0).data(), numbuf, bufsize);
+   TROTFile f2(ac.param(1).data(), numbuf, bufsize);
    int s1=f1.size();
    int s2=f2.size();
    

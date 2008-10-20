@@ -1,0 +1,32 @@
+AUTOMAKE_OPTIONS = foreign
+EXTRA_DIST = $(man_MANS) Makefile.init Makefile.common ChangeLog
+CLEANFILES = *~
+TAPPFRAME_SRC = tappconfig.cc tappconfig.h tstring.cc tstring.h texception.h tmap.h tvector.h
+
+svnclean: distclean
+	rm -f $(distdir).tar.gz $(distdir).lsm stamp-h.in mkinstalldirs missing libtapp install-sh configure config.h.in autoscan.log aclocal.m4 Makefile.in .dep.*
+	rm -f $(TAPPFRAME_SRC) COPYING Makefile.common config.guess config.sub
+	rm -rf autom4te.cache
+
+TARNAME = $(distdir).tar.gz
+LSMNAME = $(distdir).lsm
+
+mdist: dist
+	cp LSM_ENTRY $(LSMNAME)
+	streplace -q "__VERSION__=$(VERSION)" $(LSMNAME)
+	streplace -q "__DATE__=`date -R`" $(LSMNAME)
+	streplace -q "__LSM_NAME__=`ls $(LSMNAME) -l -s |awk '{printf "%3sk %s\n",$$1,$$10}'`" $(LSMNAME)
+	streplace -q "__TAR_NAME__=`ls $(TARNAME) -l -s |awk '{printf "%3sk %s\n",$$1,$$10}'`" $(LSMNAME)
+	streplace -qx '(md5sum not available)=md5sum: '`md5sum $(TARNAME)|awk '{print $$1}'` $(LSMNAME)
+
+.PHONY: mdist svnclean cl
+
+# meta object compiler for qt
+moc_%.cc: %.h
+	moc -o $@ $<
+
+cl:
+	touch ChangeLog
+	svn2cl
+
+dist: cl

@@ -37,9 +37,10 @@
 // global data:
 
 // application name set by TAppconfig:
-const char *terrorApplicationName = 0;
+//const char *terrorApplicationName = 0;
 
 
+/*
 void userWarning(const char *message, ...) {
    va_list ap;
    
@@ -49,7 +50,6 @@ void userWarning(const char *message, ...) {
    vfprintf(stderr, message, ap);
    va_end(ap);
 }
-
 
 void userError(const char *message, ...) {
    va_list ap;
@@ -61,7 +61,7 @@ void userError(const char *message, ...) {
    va_end(ap);
    exit(1);
 }
-
+*/
 
 void fatalError_func2(const char *message, ...) {
    va_list ap;

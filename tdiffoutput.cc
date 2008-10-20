@@ -92,11 +92,11 @@ control_hex(false)
    line_numbers = ac("line-numbers");
    no_line_break = ac("no-line-break");
    control_hex = ac("control-hex");
-   TString up = ac.getString("unprintable");
+   tstring up = ac.getString("unprintable");
    if(up.len()==0) unprint = 0;
    else if(up.len()==1) unprint = up[0];
    else 
-     userError("parameter for --unprintable-char should be a single char! (was '%s')\n", *up);
+     userError("parameter for --unprintable-char should be a single char! (was '%s')\n", up.data());
    
    // format?
    width = ac.getInt("width");
