@@ -1,8 +1,8 @@
 /*GPL*START*
- * tstring - NULL byte tolerant sophisticated string class
  * 
- * Copyright (C) 1998 by Johannes Overmann <overmann@iname.com>
- * Copyright (C) 2008 by Tong Sun <suntong001@users.sourceforge.net>
+ * tstring - NUL byte tolerant sophisticated string class
+ * 
+ * Copyright (C) 1997-2001 by Johannes Overmann <Johannes.Overmann@gmx.de>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,35 +14,31 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * *GPL*END*/  
 
 #ifndef _ngw_tstring_h_
 #define _ngw_tstring_h_
 
-#include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include "ttypes.h"
-#include "tminmax.h"
-#include "trelops.h"
-#include "terror.h"
-#include "tbaseexception.h"
+#include <string.h>
+#include <limits.h>
+#include "tvector.h"
+#include "texception.h"
 
-
-
-template<class T> class TArray;
+using namespace std;
 
 /**@name null tolerant string class */
 /*@{*/
 /// null tolerant string class
-class TString {
+class tstring {
  public:
-   // flags for operator(int,int)
-   enum {START=-1002, END=-1001};      
+   // invalid iterator
+   static const size_t npos = static_cast<size_t>(-1);
    // flags for scanToken()
    enum {ALPHA=1, NUM=2, DIGIT=2, LOWER=4, UPPER=8, PRINT=16, XDIGIT=32, 
       SPACE=64, ALNUM=1|2, PUNCT=128, CNTRL=256, GRAPH=1024,
@@ -53,42 +49,35 @@ class TString {
    // internal string representation
    class Rep {
     public:
-      int len; // length without term 0 byte
-      int mem; // allocated mem without term 0 byte
+      size_t len; // length without term 0 byte
+      size_t mem; // allocated mem without term 0 byte
       int ref; // reference count (>=1)
       bool vulnerable; // true == always grab by clone, never by reference
       //                  (the string has become vulnerable to the outside)
-      // char data[mem+1] string bytes follow (+1 for term 0 byte)
+      // char data[mem+1]; string data follows (+1 for term 0 byte)
       
       // return pointer to string data
       char *data() {return (char *)(this + 1);} // 'this + 1' means 'the byte following this object'
       // character access
-      char& operator[] (int i) {return data()[i];}
+      char& operator[] (size_t i) {return data()[i];}
       // reference
       Rep* grab() {if(vulnerable) return clone(); ++ref; return this;}
       // dereference
       void release() {if(--ref == 0) delete this;}
       // copy this representation
-      Rep *clone(int minmem = 0) {
-	 Rep *p = create( /* Max */ minmem>len ? minmem:len);   
-	 p->len = len;
-	 memcpy(p->data(), data(), len+1);
-	 return p;}
+      Rep *clone(size_t minmem = 0);
       // terminate string with 0 byte
       void terminate() {*(data()+len) = 0;} // set term 0 byte
       
       // static methods
       // operator new for this class
-      static void * operator new (size_t size, int tmem) {
+      static void * operator new (size_t size, size_t tmem) {
 	 return ::operator new (size + tmem + 1);}
+      static void operator delete (void *p, size_t) {
+	 ::operator delete (p); }
       
       // create a new representation
-      static Rep *create(int tmem) {
-	 int m = 32;
-	 while((m-1-int(sizeof(Rep))) < tmem) m<<=1;
-	 Rep *p = new (m-1-sizeof(Rep)) Rep;
-	 p->mem = m-1-sizeof(Rep); p->ref = 1; p->vulnerable = false;
-	 return p;}
+      static Rep *create(size_t tmem);
             
       // return pointer to the null string representation
       static Rep * nulRep() {if(nul == 0) createNulRep(); return nul;}
@@ -105,115 +94,77 @@ class TString {
     private:
       // static null string ("") representation
       static Rep* nul;
-      static int nul_mem[10];
+      static char nul_mem[];
       // static zero string ("0") representation
       static Rep* zero;
-      static int zero_mem[10];
+      static char zero_mem[];
       
-      // forbid copy/construction
-      //Rep();
-      //Rep(const Rep&);
-      Rep& operator = (const Rep&);
+      // forbid assignement
+      Rep& operator=(const Rep&);
    };
    
  public:
    /**@name constructor & destructor */
    /*@{*/
    /// default construction
-   TString(): rep(Rep::nulRep()->grab()) {}
+   tstring(): rep(Rep::nulRep()->grab()) {}
    /// copy construction
-   TString(const TString& a):rep(a.rep->grab()) {}
+   tstring(const tstring& a):rep(a.rep->grab()) {}
    /// init from cstring
-   TString(const char *s):rep(0) {
-      if(s){
-	 int len = strlen(s);
-	 rep = Rep::create(len);
-	 rep->len = len;
-	 strcpy(rep->data(), s);
-      } else rep = Rep::nulRep()->grab();
-   }
+   tstring(const char *s);
    /// extract bytearray s of length len 
-   TString(const char *s, int len):rep(0) {
-      if(s && len){
-	 rep = Rep::create(len);
-	 rep->len = len;
-	 if(len) memcpy(rep->data(), s, len);      
-	 rep->terminate();
-      } else rep = Rep::nulRep()->grab();
-   }
+   tstring(const char *s, size_t len);
    /// create string of chars c with length n
-   explicit TString(char c, int n):rep(0) {
-      if(n>0) {
-	 rep = Rep::create(n);
-	 rep->len = n;
-	 if(n) memset(rep->data(), c, n);      
-	 rep->terminate();      
-      } else rep = Rep::nulRep()->grab();
-   }
+   explicit tstring(char c, size_t n);
    /// char to string conversion
-   TString(char c):rep(0) {rep = Rep::create(1); rep->len = 1; (*rep)[0] = c; rep->terminate();}
+   explicit tstring(char c);
    /// int to string conversion
-   TString(int i):rep((i==0)?(Rep::zeroRep()->grab()):(Rep::nulRep()->grab())) {if(i) sprintf("%d", i);}
+   explicit tstring(int i);
    /// int to string conversion with format
-   TString(int i, const char *format):rep(Rep::nulRep()->grab()) {sprintf(format, i);}
+   explicit tstring(int i, const char *format);
    /// double to string conversion
-   TString(double d, const char *format = "%g"):rep(Rep::nulRep()->grab()) {sprintf(format, d);}
+   explicit tstring(double d, const char *format = "%g");
    /// destructor
-   ~TString() {rep->release();}
+   ~tstring() {rep->release();}
    /*@}*/
       
    
    /**@name main interface */
    /*@{*/
    /// return length in bytes
-   int len() const {return rep->len;}
+   size_t len() const {return rep->len;}
+   /// return length in bytes
+   size_t length() const {return rep->len;}
+   /// return length in bytes
+   size_t size() const {return rep->len;}
    /// clear string
-   void empty() {replaceRep(Rep::nulRep()->grab());}
-   /// implicit conversion to c-style string
-   operator const char * () const {return rep->data();}
-   /// explicit conversion, needed for {\tt printf}
-   const char * operator * () const {return rep->data();}
-   /// direct data access: {\bf dangerous! do not use!}
-   char * data() {invulnerableDetach(); return rep->data();}
-   /// true if string not empty, else false
-   operator bool() const {return rep->len > 0;}
+   void clear() {replaceRep(Rep::nulRep()->grab());}
+   /// explicit conversion to c string
+   // const char *operator*() const {return rep->data();}
+   /// explicit conversion to c string
+   const char *c_str() const {return rep->data();}
+   /// explicit conversion to c string
+   const char *data() const { return rep->data();}
+   /// direct raw data access: user with caution
+   char *rawdata() { invulnerableDetach(); return rep->data(); }
+   /// return true if string is empty, else false
+   bool empty() const {return rep->len == 0;}
    /// append string
-   TString& operator += (const TString& a) {if(a) {append(a.rep->data(), a.rep->len);} return *this;}
+   tstring& operator += (const tstring& a);
    /// append cstring
-   TString& operator += (const char *a) {if(a) append(a, strlen(a)); return *this;}
+   tstring& operator += (const char *a);
+   /// append cstring
+   tstring& operator += (char c);
    /// append byte array a of length len
-   TString& append(const char *a, int alen) {
-      if(a) {
-	 detachResize(rep->len + alen);
-	 memcpy(rep->data() + rep->len, a, alen);
-	 rep->len += alen;
-	 rep->terminate();
-      }
-      return *this;
-   }
+   tstring& append(const char *a, int alen);
    /// assign string a to this
-   TString& operator = (const TString& a) 
-   {if(&a != this) {rep->release(); rep = a.rep->grab();} return *this;}
+   tstring& operator = (const tstring& a);
    /// direct character access: const/readonly
-   char operator [] (int i) const /* throw(IndexOutOfRange) */ {
-      if((unsigned int)i <= (unsigned int)rep->len) return (*rep)[i];
-      throw IndexOutOfRange(i, rep->len);
-   }
+   char operator [] (size_t i) const;
    /// direct character access: read/write
-   char& operator [] (int i) /* throw(IndexOutOfRange) */ {
-      if((unsigned int)i < (unsigned int)rep->len) {detach(); return (*rep)[i];}
-      throw IndexOutOfRange(i, rep->len);
-   } 
+   char& operator [] (size_t i);
    /// substring extraction (len=end-start)
-   TString operator() (int start, int end) const /* throw(InvalidRange) */ {
-      if(start==START) start = 0;
-      if(end  ==END  ) end = rep->len;
-      if(((unsigned int)start > (unsigned int)rep->len)||
-	 ((unsigned int)end   > (unsigned int)rep->len)||(end < start)) {
-	 throw InvalidRange(start, end, rep->len);
-      }
-      return TString(rep->data()+start, end-start); 
-   }
+   tstring substr(size_t start, size_t end = npos) const;
    /// ASCII to number conversion
    bool toLong(long& long_out, int base = 0) const;
    bool toInt(int& int_out, int base = 0) const;
@@ -225,36 +176,36 @@ class TString {
    /**@name scanning */
    /*@{*/
    /// return a scanned token with scanner
-   TString scanToken(int& scanner, int flags, 
+   tstring scanToken(size_t& scanner, int flags, 
 		  const char *allow=0, const char *forbid=0, 
 		  bool allow_quoted=false) const;
    /// scan a token or quoted string to out with scanner
-   TString scanString(int& scanner, int flags, 
+   tstring scanString(size_t& scanner, int flags, 
 		  const char *allow=0, const char *forbid=0) const {
 		     return scanToken(scanner, flags, allow, forbid, true);}
    /// scan a token up to char upto
-   TString scanUpTo(int& scanner, char upto) const {
+   tstring scanUpTo(size_t& scanner, char upto) const {
       int start(scanner);
-      while((uint(scanner)<uint(rep->len))&&((*rep)[scanner]!=upto)) ++scanner;
-      return operator()(start, scanner);}
+      while((scanner < rep->len)&&((*rep)[scanner]!=upto)) ++scanner;
+      return substr(start, scanner);}
    /// scan a token to out up to chars upto
-   TString scanUpTo(int& scanner, const char *upto) const {
+   tstring scanUpTo(size_t& scanner, const char *upto) const {
       int start(scanner);
-      while((uint(scanner)<uint(rep->len))&&(strchr(upto, (*rep)[scanner])==0))
+      while((scanner < rep->len)&&(strchr(upto, (*rep)[scanner])==0))
 	++scanner;
-      return operator()(start, scanner);}
+      return substr(start, scanner);}
    /// return the rest of the scanned string
-   TString scanRest(int& scanner) const {if(uint(scanner)<uint(rep->len)) {
-      int start(scanner);scanner=rep->len;return operator()(start, scanner);
-   } return TString();}   
+   tstring scanRest(size_t& scanner) const {if(scanner < rep->len) {
+      int start(scanner);scanner=rep->len;return substr(start, scanner);
+   } return tstring();}   
    /// skip spaces
-   void skipSpace(int& scanner) const 
-   {while((uint(scanner)<uint(rep->len))&&isspace((*rep)[scanner]))++scanner;}
+   void skipSpace(size_t& scanner) const
+   {while((scanner < rep->len)&&isspace((*rep)[scanner]))++scanner;}
    /// perhaps skip one char c
-   void perhapsSkipOneChar(int& scanner, char c) const 
-   {if((uint(scanner)<uint(rep->len))&&((*rep)[scanner]==c)) ++scanner;}
+   void perhapsSkipOneChar(size_t& scanner, char c) const 
+   {if((scanner < rep->len)&&((*rep)[scanner]==c)) ++scanner;}
    /// return true if the end of string (eos) is reached
-   bool scanEOS(int scanner) const 
+   bool scanEOS(size_t scanner) const
    {if(scanner >= rep->len) return true; else return false;}
    
    
@@ -265,11 +216,13 @@ class TString {
    /// return true if entire string consists of whitespace
    bool consistsOfSpace() const;
    /// return true if string has prefix 
-   bool hasPrefix(const TString& prefix) const;
+   bool hasPrefix(const tstring& prefix) const;
    /// return true if string has suffix 
-   bool hasSuffix(const TString& suffix) const;
-   /// return index of first occurence of char c or -1 if not found
-   int firstOccurence(char c) const;
+   bool hasSuffix(const tstring& suffix) const;
+   /// return index of first occurence of char c or npos if not found
+   size_t firstOccurence(char c) const;
+   /// check whether char is contained or not
+   bool contains(char c) const { return firstOccurence(c) != npos; }
    /// remove whitespace at beginning and end 
    void cropSpace();
    /// remove whitespace at end
@@ -279,11 +232,15 @@ class TString {
    /// replace char from with char to
    void translateChar(char from, char to);
    /// expand unprintable chars to C-style backslash sequences
-   void expandUnprintable(void);
+   void expandUnprintable(char quotes = 0);
    /// backslashify backslash and quotes 
-   void backslashify(void);
+   void backslashify();
    /// compile C-style backslash sequences back to unprintable chars
-   void compileCString(void);   
+   void compileCString();
+   /// truncate to maximal length max
+   void truncate(size_t max);
+   /// replace unprintable characters for safe printing
+   void replaceUnprintable(bool only_ascii = true);
    /**
     remove quotes
     @param allow_bslash true == backslashing allowed to protect quotes
@@ -291,11 +248,9 @@ class TString {
     */
    void unquote(bool allow_bslash = true, bool crop_space = true);
    /// return and remove the first words that fit into a string of length max
-   TString getFitWords(int max); // throw(InvalidWidth);
+   tstring getFitWords(size_t max); // throw(InvalidWidth);
    /// remove the first words that fit into a string of length max and return in block format
-   TString getFitWordsBlock(int max); // throw(InvalidWidth);
-   /// truncate to maximal length max
-   void truncate(int max);
+   tstring getFitWordsBlock(size_t max); // throw(InvalidWidth);
    /// remove html tags (level == number of open brakets before call, init:0)
    void removeHTMLTags(int& level);
    /*@}*/
@@ -303,15 +258,17 @@ class TString {
    /**@name search/replace */
    /*@{*/
    /// replace substring search with replace, return number of replacements (not regexp, use TRegEx to match regular expressions)
-   int searchReplace(const TString& search, const TString& replace,
+   int searchReplace(const tstring& search, const tstring& replace,
 		     bool ignore_case=false, bool whole_words=false, 
 		     bool preserve_case=false, int progress=0,
-		     const TString& pre_padstring=TString(), 
-		     const TString& post_padstring=TString(), TArray<int> *match_pos=0);
-   /// return number of occurences of pat (not regexp)
-   int search(const TString& pat, 
+		     const tstring& pre_padstring=tstring(), 
+		     const tstring& post_padstring=tstring(), tvector<int> *match_pos=0, int max_num = INT_MAX);
+   /// return number of occurences of pat (not regexp) returns -1 on empty pat
+   int search(const tstring& pat, 
 	      bool ignore_case=false, bool whole_words=false,
-	      int progress=0, TArray<int> *match_pos=0) const; // throw(StringIsEmpty);
+	      int progress=0, tvector<int> *match_pos=0) const; // throw(StringIsEmpty);
+   /// replace substring
+   void replace(size_t start, size_t len, const tstring &str);
    /*@}*/
       
    /**@name file I/O */
@@ -319,31 +276,33 @@ class TString {
    /// read line from file like fgets, no line length limit
    bool readLine(FILE *file);
    /// write string to file, return number of bytes written
-   int write(FILE *file) const;
+   size_t write(FILE *file) const;
    /// read len bytes from file to string, return bytes read
-   int read(FILE *file, int len); // throw(InvalidWidth);
+   size_t read(FILE *file, size_t len); // throw(InvalidWidth);
    /// read whole file into one string, return 0 on success -x on error
    int readFile(const char *filename);
+   /// write string into file, return 0 on success -x on error
+   int writeFile(const char *filename);
    /*@}*/
    
    /**@name filename manipulation */
    /*@{*/
    /// remove leading path from filename
-   void extractFilename();   
+   void extractFilename();
    /// remove part after last slash
    void extractPath();   
    /// add a slash at the end if it is missing
    void addDirSlash();
    /// remove last char if last char is a slash
    void removeDirSlash();      
-   /// extract part after the last period (empty string if no extension, leading period is ignored)
+   /// extract part after the last dot (empty string if no extension, leading dot is ignored)
    void extractFilenameExtension();
    /// make paths comparable (kill multislash, dots and resolve '..')
    void normalizePath();
    /// check for absolute path
    bool isAbsolutePath() const {if((*rep)[0]=='/') return true; return false;}
    /// get truncated filename (for printing puroses)
-   TString shortFilename(int maxchar) const;
+   tstring shortFilename(size_t maxchar) const;
    /*@}*/
    
    /**@name misc */
@@ -351,34 +310,11 @@ class TString {
    /// get percentage of nonprintable and nonspace chars (0.0 .. 100.0)
    double binaryPercentage() const;
    /// check for 0 in string (then its not a real cstring anymore)
-   bool containsNulChar() const {rep->terminate(); 
-      if(int(strlen(rep->data())) != rep->len) return true; else return false;}
+   bool containsNulChar() const;
    /// get a pointer to the at most max last chars (useful for printf)
-   const char *pSuf(int max) const {return rep->data()+((max>=rep->len)?0:(rep->len-max));}
+   const char *pSuf(size_t max) const;
    /// sprintf into this string
-   void sprintf(const char *format, ...) {
-      va_list ap;
-      int ret;
-      va_start(ap, format);
-#ifdef __STRICT_ANSI__
-      // this is the unsecure and dirty but ansi compatible version
-      // heuristic size, very large, may be still too small
-      detachResize((1024 + 16*strlen(format)) * 2);      
-      ret = vsprintf(rep->data(), format, ap); // not secure! may write out of bounds!
-      if(ret >= rep->mem/2)
-	 throw StringTooLong();
-#else
-      // this is the clean version (never overflows)
-      int size = 32/4;
-      do { 
-	 size *= 4; // fast increase, printf may be slow
-	 detachResize(size);
-	 ret = vsnprintf(rep->data(), size, format, ap); 
-      } while((ret == -1)||(ret>=size));
-#endif
-      va_end(ap);
-      rep->len = ret;
-   }
+   void sprintf(const char *format, ...);
    /*@}*/
    
    /**@name case */
@@ -401,42 +337,17 @@ class TString {
    /**@name detach methods */
    /*@{*/
    /// detach from string pool, you should never need to call this
-   void detach() {if(rep->ref > 1) {rep->release(); rep = rep->clone();}}
+   void detach();
    // no, there is *not* a dangling pointer here (ref > 1)
    /** detach from string pool and make sure at least minsize bytes of mem are available
     (use this before the dirty version sprintf to make it clean)
     (use this before the clean version sprintf to make it fast)
     */
-   void detachResize(int minsize) {
-      if((rep->ref==1) && (minsize <= rep->mem)) return;
-      Rep *p = rep->clone(minsize);
-      rep->release(); 
-      rep = p;
-   }
+   void detachResize(size_t minsize);
    /// detach from string pool and declare that string might be externally modified (the string has become vulnerable)
-   void invulnerableDetach() {detach(); rep->vulnerable = true;}
+   void invulnerableDetach();
    /*@}*/
    
-   /**@name exceptions */
-   /*@{*/
-   class StringTooLong: public TException {}; // for unsecure version of sprintf
-   class StringIsEmpty: public TException {}; // for search (pattern)
-   class InvalidWidth: public TException {
-    public:
-      InvalidWidth(int width): width(width) {}
-      int width;
-   };
-   class InvalidRange: public TException {
-    public:
-      InvalidRange(int lower, int upper, int length): lower(lower), upper(upper), length(length) {}
-      int lower, upper, length;
-   };
-   class IndexOutOfRange: public TIndexOutOfRangeException {
-    public:
-      IndexOutOfRange(int index, int length): TIndexOutOfRangeException(0, index, length-1) {}
-   };
-   /*@}*/
-
  private:
    // hidden string representation
    Rep *rep;
@@ -446,17 +357,8 @@ class TString {
 
  public:
    // compare helpers
-   static int _string_cmp(const TString& s1, const TString& s2) {
-      int r = memcmp(s1.rep->data(),s2.rep->data(),tMin(s1.rep->len,s2.rep->len));
-      if(r) return r;
-      if(s1.rep->len > s2.rep->len) return +1;
-      if(s1.rep->len < s2.rep->len) return -1;
-      return 0;
-   }
-   static bool _string_equ(const TString& s1, const TString& s2) {
-      if(s1.rep->len != s2.rep->len) return false;
-      return memcmp(s1.rep->data(), s2.rep->data(), s1.rep->len)==0;
-   }
+   static int _string_cmp(const tstring& s1, const tstring& s2);
+   static bool _string_equ(const tstring& s1, const tstring& s2);
 };
 
 
@@ -465,20 +367,15 @@ class TString {
 /**@name concat operators */
 /*@{*/
 ///
-inline TString operator + (const TString& s1, const TString& s2) {
-   TString r(s1); r += s2; return r; }
+tstring operator + (const tstring& s1, const tstring& s2);
 ///
-inline TString operator + (const char *s1, const TString& s2) {
-   TString r(s1); r += s2; return r; }
+tstring operator + (const char *s1, const tstring& s2);
 ///
-inline TString operator + (const TString& s1, const char *s2) {
-   TString r(s1); r += s2; return r; }
+tstring operator + (const tstring& s1, const char *s2);
 ///
-inline TString operator + (char s1, const TString& s2) {
-   TString r(s1); r += s2; return r; }
+tstring operator + (char s1, const tstring& s2);
 ///
-inline TString operator + (const TString& s1, char s2) {
-   TString r(s1); r += TString(s2); return r; }
+tstring operator + (const tstring& s1, char s2);
 /*@}*/
 
 
@@ -486,62 +383,66 @@ inline TString operator + (const TString& s1, char s2) {
 /**@name compare operators */
 /*@{*/
 ///
-inline bool operator == (const TString& s1, const TString& s2) {return TString::_string_equ(s1, s2);}
+bool operator == (const tstring& s1, const tstring& s2);
 ///
-inline bool operator == (const TString& s1, const char   *s2) {return (strcmp(s1, s2)==0);}
+bool operator == (const tstring& s1, const char   *s2);
 ///
-inline bool operator == (const char   *s1, const TString& s2) {return (strcmp(s1, s2)==0);}
+bool operator == (const char   *s1, const tstring& s2);
 ///
-inline bool operator != (const TString& s1, const char   *s2) {return (strcmp(s1, s2)!=0);}
+bool operator != (const tstring& s1, const tstring& s2);
 ///
-inline bool operator != (const char   *s1, const TString& s2) {return (strcmp(s1, s2)!=0);}
+bool operator != (const tstring& s1, const char   *s2);
 ///
-inline bool operator <  (const TString& s1, const TString& s2) {return (TString::_string_cmp(s1, s2) < 0);}
+bool operator != (const char   *s1, const tstring& s2);
 ///
-inline bool operator <  (const TString& s1, const char   *s2) {return (strcmp(s1, s2) < 0);}
+bool operator <  (const tstring& s1, const tstring& s2);
 ///
-inline bool operator <  (const char   *s1, const TString& s2) {return (strcmp(s1, s2) < 0);}
+bool operator <  (const tstring& s1, const char   *s2);
 ///
-inline bool operator >  (const TString& s1, const char   *s2) {return (strcmp(s1, s2) > 0);}
+bool operator <  (const char   *s1, const tstring& s2);
 ///
-inline bool operator >  (const char   *s1, const TString& s2) {return (strcmp(s1, s2) > 0);}
+bool operator >  (const tstring& s1, const char   *s2);
+///
+bool operator >  (const char   *s1, const tstring& s2);
+///
+bool operator >  (const tstring& s1, const tstring& s2);
 /*@}*/
 
 
 /**@name misc friends and nonmembers */
 /*@{*/
 /// split string into pieces by characters in c-str separator
-TArray<TString> split(const TString& s, const char *separator,
+tvector<tstring> split(const tstring& s, const char *separator,
 		     bool allow_quoting=false,
 		     bool crop_space=false);
 
 /// join, reverse the effect of split
-TString join(const TArray<TString>& a, const TString& separator);
+tstring join(const tvector<tstring>& a, const tstring& separator);
 
 /// try to preserve case from 'from' to 'to' and return altered 'to' with case from 'from'
-TString preserveCase(const TString& from, const TString& to);
+tstring preserveCase(const tstring& from, const tstring& to);
 
 /// modify case 
-inline TString modifyCase(const TString& s, int _case) {
-   TString r(s);
+inline tstring modifyCase(const tstring& s, int _case) {
+   tstring r(s);
    switch(_case) {
-    case TString::UPPER:      r.upper(); break;
-    case TString::LOWER:      r.lower(); break;
-    case TString::CAPITALIZE: r.capitalize(); break;
+    case tstring::UPPER:      r.upper(); break;
+    case tstring::LOWER:      r.lower(); break;
+    case tstring::CAPITALIZE: r.capitalize(); break;
     default: break;      
    }
    return r;
 }
 
+/// Create progress bar
+const char *progressBar(const char *message = 0, unsigned int n = 0, unsigned int max = 0, int width = 79);
 
 /// load text file to array of strings
-TArray<TString> loadTextFile(const char *fname);
+tvector<tstring> loadTextFile(const char *fname);
 /// load text file to array of strings
-TArray<TString> loadTextFile(FILE *file);
-
+tvector<tstring> loadTextFile(FILE *file);
 
 /*@}*/
 /*@}*/
 
-
-#endif
+#endif /* _ngw_tstring_h_ */
