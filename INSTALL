@@ -1,0 +1,13 @@
+Installation:
+=============
+
+Type:
+  ./configure
+  make 
+  make install
+
+
+If you want to debug use:
+  make CXXFLAGS="-Wall -W -g"
+instead of
+  make

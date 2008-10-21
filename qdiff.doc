@@ -1,0 +1,156 @@
+= qdiff
+
+== Basics
+
+=== Info
+
+qdiff - quick binary files differ
+
+=== Source
+
+http://www.nongnu.org/qdiff/
+
+http://savannah.nongnu.org/projects/qdiff
+
+http://git.savannah.gnu.org/gitweb/?p=qdiff.git
+
+=== Description
+
+'qdiff' is a binary files differ that can detect binary
+insertions/deletions/substitutions with colorful outputs.
+It is released under GPL version 2.
+
+=== Features
+
+The differences can be printed in various ways, very colorful output
+(insertions/deletions/substitutions), simple yet effective syncro engine,
+useful and fast for large files with few differences (e.g. verifying
+correctness of grabbed cdda data).
+
+== Help
+
+=== Usage Help
+
+----------------------------------------------------------------------------
+Usage: qdiff [OPTION]... FILE1 FILE2
+
+
+diff options:
+-b --byte-by-byte        compare files byte by byte, like 'cmp'
+-f --no-heuristics       do not use heuristics to speed up large differing
+                         blocks, note that the result is always correct but
+                         with this option you may find a smaller number of
+                         differing bytes
+-m --min-match=NUM       allow resynchronisation only after a minimum of NUM
+                         bytes match, this is an important parameter: lower
+                         values may result in a more detailed analysis or in
+                         useless results, higher values give a coarse analysis
+                         but resynchronisation is more robust (range=[1..],
+                         default=20)
+-O --large-files         optimize disk access for large files on the same disk
+                         (locks 16MB mem)
+
+output modes:  (override automatic file type determination)
+-a --formatted           print formatted ascii text, line by line
+-u --unformatted         print unformatted ascii text, block by block
+-x --hex                 print hex dump, block by block
+-t --vertical            print one byte per line (ignores width)
+
+output options:
+-c --no-color            disable ansi coloring of output
+-C --alt-colors          no bold ansi coloring (for SGI terminals and the like)
+-w --width=NUM           output maximal NUM chars (default is terminal width)
+-B --bytes-per-line=NUM  print NUM bytes/chars per line
+-T --tab-size=TABSIZE    TABSIZE in formatted mode (range=[1..], default=8)
+-l --line-numbers        print line numbers in formatted mode
+-n --no-line-break       truncate (not break) lines in formatted mode
+-L --show-lf-and-tab     show newline/tab as <LF>/<HT> in formatted mode
+-S --show-space          show space as <SPC> in non hex modes
+-U --unprintable=CHAR    print CHAR for unprintable chars in non hex modes
+-H --control-hex         print control codes in hex (<x1B>, not <ESC>)
+-A --alignment-marks     print -/+ before 32/64-bit words in hex mode
+-e --stop-on-eof         stop when end of a file is reached in vertical mode
+   --hide-match          do not print matches
+   --hide-deletion       do not print deletions
+   --hide-insertion      do not print insertions
+   --hide-substitution   do not print substitutions
+   --range-match         print match as byte range
+   --range-deletion      print deletion as byte range
+   --range-insertion     print insertion as byte range
+   --range-substitution  print substitution as two byte ranges
+-R --range               print everything as byte range
+
+common options:
+-v --verbose             verbose execution
+-P --progress            show progress during work
+-h --help                print this help message, then exit successfully
+   --version             print version, then exit successfully
+
+qdiff version 0.9.0
+ *** (C) 1997-1999 by Johannes Overmann
+ *** (C) 2008 by Tong Sun
+comments, bugs and suggestions welcome: suntong001@users.sourceforge.net
+this program is distributed under the terms of the GNU General Public License version 2
+----------------------------------------------------------------------------
+
+=== Build & Installation
+
+Type:
+
+  ./configure
+  make 
+  make install
+
+If you want to debug use:
+
+  make CXXFLAGS="-Wall -W -g"
+
+instead of
+
+  make
+
+== Usage example
+
+Let's see what magic tricks have been played to mpeg videos after making it
+into DVD VOB file.
+
+First we use dvdauthor to turn an mpeg video into DVD:
+
+ $ dvdauthor -o dvdauth -t test.mpg 
+  . . .
+ INFO: Generating VTS with the following video attributes:
+ INFO: MPEG version: mpeg2
+ INFO: TV standard: pal
+ INFO: Aspect ratio: 16:9
+ INFO: Resolution: 704x576
+ INFO: Audio ch 0 format: ac3/6ch, 48khz drc
+
+ $ dvdauthor -o dvdauth -T
+  . . .
+ INFO: dvdauthor creating table of contents
+ INFO: Scanning dvdauth/VIDEO_TS/VTS_01_0.IFO
+
+Now let's see what has happened: 
+
+ qdiff -R test.mpg dvdauth/VIDEO_TS/VTS_01_1.VOB 
+
+image:qdiff.png[]
+
+FYI, I made an alias for this 'qdiff -R' command for myself:
+
+ $ alias diffb
+ alias diffb='qdiff -R'
+
+With it you can 
+
+ diffb bin_file1 bin_file2
+
+This is just one way of using the qdiff's many output options to look at the
+changes. Check out the above "Usage Help" for more options.
+
+Enjoy.
+
+== Author
+
+- The 'qdiff' is written by Johannes Overmann. 
+- Latest maintainer is Tong Sun, http://xpt.sourceforge.net/
