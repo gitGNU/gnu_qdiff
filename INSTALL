@@ -11,3 +11,13 @@ If you want to debug use:
   make CXXFLAGS="-Wall -W -g"
 instead of
   make
+
+To get from latest git repository:
+
+  git clone --depth 1 git://git.sv.gnu.org/qdiff.git
+  cd qdiff
+  rm -rf .git
+
+  ./configure
+  make 
+  ./qdiff -h
