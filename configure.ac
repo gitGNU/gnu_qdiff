@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT(streplace)
-AM_INIT_AUTOMAKE(qdiff,0.9.0)
+AM_INIT_AUTOMAKE(qdiff,0.9.1)
 AC_CONFIG_SRCDIR(qdiff.cc)
 AM_CONFIG_HEADER(config.h)
 
